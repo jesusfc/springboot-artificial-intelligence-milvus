@@ -2,14 +2,16 @@ package com.jesusfc.springboot_artificial_intelligence_milvus.bootstrap;
 
 import com.jesusfc.springboot_artificial_intelligence_milvus.config.MilvusConfig;
 import com.jesusfc.springboot_artificial_intelligence_milvus.config.VectorStoreProperties;
+import io.milvus.client.MilvusServiceClient;
 import io.milvus.grpc.ListDatabasesResponse;
 import io.milvus.param.R;
+import io.milvus.param.collection.HasCollectionParam;
+import io.milvus.param.highlevel.collection.CreateSimpleCollectionParam;
+import io.milvus.param.highlevel.collection.ListCollectionsParam;
+import io.milvus.param.highlevel.collection.response.ListCollectionsResponse;
 import io.milvus.v2.client.MilvusClientV2;
-import io.milvus.v2.service.collection.request.DescribeCollectionReq;
-import io.milvus.v2.service.collection.request.GetLoadStateReq;
+import io.milvus.v2.service.collection.request.CreateCollectionReq;
 import io.milvus.v2.service.collection.request.HasCollectionReq;
-import io.milvus.v2.service.collection.request.LoadCollectionReq;
-import io.milvus.v2.service.collection.response.DescribeCollectionResp;
 import io.milvus.v2.service.collection.response.ListCollectionsResp;
 import io.milvus.v2.service.database.response.ListDatabasesResp;
 import org.springframework.ai.document.Document;
@@ -49,28 +51,41 @@ public class LoadVectorStore implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        MilvusClientV2 milvusConnection = milvusConfig.createMilvusConnection();
+        MilvusServiceClient milvusConnection = milvusConfig.createMilvusConnection();
 
-        ListDatabasesResp listDatabasesResponse = milvusConnection.listDatabases();
-        System.out.println(listDatabasesResponse.getDatabaseNames());
+        R<ListDatabasesResponse> r = milvusConnection.listDatabases();
+        System.out.println(r.getData());
 
-        HasCollectionReq hasCollectionReq = HasCollectionReq.builder().
-                collectionName("vector_store").build();
+        R<ListCollectionsResponse> lc = milvusConnection.listCollections(ListCollectionsParam.newBuilder().build());
+        System.out.println(lc.getData());
 
-        Boolean b = milvusConnection.hasCollection(hasCollectionReq);
-        System.out.println(b);
+        HasCollectionParam hasCollectionReq = HasCollectionParam.newBuilder()
+                .withDatabaseName("default")
+                .withCollectionName("vector_store")
+                .build();
 
-        ListCollectionsResp listCollectionsResp = milvusConnection.listCollections();
-        System.out.println(listCollectionsResp);
+        R<Boolean> b = milvusConnection.hasCollection(hasCollectionReq);
+        System.out.println(b.getData());
 
+        if (!b.getData()) {
+            // 2. Create a collection in quick setup mode
+            CreateSimpleCollectionParam quickSetupReq = CreateSimpleCollectionParam.newBuilder()
+                    .withCollectionName("vector_store")
+                    .withDimension(5)
+                    .build();
 
+            milvusConnection.createCollection(quickSetupReq);
+        }
 
-        /*
-        if (vectorStore.similaritySearch("Sportsman").isEmpty()){
+        R<ListCollectionsResponse> listCollectionsResp = milvusConnection.listCollections(ListCollectionsParam.newBuilder().build());
+        System.out.println(listCollectionsResp.getData());
+
+       // if (vectorStore.similaritySearch("Sportsman").isEmpty()){
             System.out.println("Loading documents into vector store");
 
             vectorStoreProperties.getDocumentsToLoad().forEach(document -> {
                 System.out.println("Loading document: " + document.getFilename());
+
 
                 TikaDocumentReader documentReader = new TikaDocumentReader(document);
                 List<Document> documents = documentReader.get();
@@ -80,13 +95,15 @@ public class LoadVectorStore implements CommandLineRunner {
                 List<Document> splitDocuments = textSplitter.apply(documents);
 
                 vectorStore.add(splitDocuments);
-            });
-        }
+
+
+           });
+
+        //}
 
         System.out.println("Vector store loaded");
-        
-        */
+
     }
-    
-         
+
+
 }
