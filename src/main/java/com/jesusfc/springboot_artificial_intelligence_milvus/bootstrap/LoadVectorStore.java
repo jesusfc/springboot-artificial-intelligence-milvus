@@ -2,25 +2,13 @@ package com.jesusfc.springboot_artificial_intelligence_milvus.bootstrap;
 
 import com.jesusfc.springboot_artificial_intelligence_milvus.config.MilvusConfig;
 import com.jesusfc.springboot_artificial_intelligence_milvus.config.VectorStoreProperties;
-import io.milvus.grpc.ListDatabasesResponse;
-import io.milvus.param.R;
 import io.milvus.v2.client.MilvusClientV2;
-import io.milvus.v2.service.collection.request.DescribeCollectionReq;
-import io.milvus.v2.service.collection.request.GetLoadStateReq;
 import io.milvus.v2.service.collection.request.HasCollectionReq;
-import io.milvus.v2.service.collection.request.LoadCollectionReq;
-import io.milvus.v2.service.collection.response.DescribeCollectionResp;
 import io.milvus.v2.service.collection.response.ListCollectionsResp;
 import io.milvus.v2.service.database.response.ListDatabasesResp;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.reader.tika.TikaDocumentReader;
-import org.springframework.ai.transformer.splitter.TextSplitter;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Author Jesús Fdez. Caraballo
